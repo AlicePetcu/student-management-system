@@ -180,6 +180,50 @@ class EditDialog(QDialog):
         self.setFixedWidth(300)
         self.setFixedHeight(300)
 
+        layout = QVBoxLayout()
+
+        index = student_management.table.currentRow()
+        self.id = student_management.table.item(index, 0).text()
+        print(self.id)
+
+        # Add Name widget
+        student_name = student_management.table.item(index, 1).text()
+        self.student_name = QLineEdit(student_name)
+        layout.addWidget(self.student_name)
+
+        # Add course widget
+        course = student_management.table.item(index, 2).text()
+        self.courses = QComboBox()
+        self.courses.addItems(['Math', 'Astronomy', 'Biology', 'Physics'])
+        self.courses.setCurrentText(course)
+        layout.addWidget(self.courses)
+
+        # Add mobile widget
+        mobile = student_management.table.item(index, 3).text()
+        self.mobile_number = QLineEdit(mobile)
+        layout.addWidget(self.mobile_number)
+
+        # Add submit button
+        edit_button = QPushButton("Edit")
+        edit_button.clicked.connect(self.edit_record)
+        layout.addWidget(edit_button)
+
+        self.setLayout(layout)
+
+    def edit_record(self):
+        name = self.student_name.text()
+        course = self.courses.currentText()
+        mobile = self.mobile_number.text()
+        print (name, course, mobile, self.id)
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("UPDATE students SET name=?, course=?, mobile=? WHERE id=?",
+                       (name, course, mobile, self.id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        student_management.load_data()
+
 
 class DeleteDialog(QDialog):
     def __init__(self):
