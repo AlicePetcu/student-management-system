@@ -1,7 +1,7 @@
 import sys
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QVBoxLayout, QLabel, QWidget, \
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QLabel, QMessageBox, \
     QGridLayout, QLineEdit, QPushButton, QComboBox, QMainWindow, QTableWidget, \
     QTableWidgetItem, QDialog, QToolBar, QStatusBar
 from PyQt6.QtGui import QAction, QIcon
@@ -134,6 +134,7 @@ class InsertDialog(QDialog):
         cursor.close()
         connection.close()
         student_management.load_data()
+        self.close()
 
 
 class SearchDialog(QDialog):
@@ -171,6 +172,7 @@ class SearchDialog(QDialog):
 
         cursor.close()
         connection.close()
+        self.close()
 
 
 class EditDialog(QDialog):
@@ -223,18 +225,49 @@ class EditDialog(QDialog):
         cursor.close()
         connection.close()
         student_management.load_data()
+        self.close()
 
 
 class DeleteDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Delete Record")
-        self.setFixedWidth(300)
-        self.setFixedHeight(200)
+
+        # Get selected row index and student id
+        index = student_management.table.currentRow()
+        self.id = student_management.table.item(index, 0).text()
+        print(self.id)
+
+        layout = QGridLayout()
+        confirmation = QLabel("Are you sure you want to delete?")
+        yes = QPushButton("Yes")
+        yes.clicked.connect(self.delete_record)
+        no = QPushButton("No")
+        no.clicked.connect(self.close)
+
+        layout.addWidget(confirmation, 0, 0, 1, 2)
+        layout.addWidget(yes, 1, 0)
+        layout.addWidget(no, 1, 1)
+
+        self.setLayout(layout)
+
+    def delete_record(self):
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM students WHERE id=?", (self.id, ))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        student_management.load_data()
+
+        self.close()
+        confirmation_box = QMessageBox()
+        confirmation_box.setWindowTitle("Success")
+        confirmation_box.setText("The record was deleted successfully!")
+        confirmation_box.exec()
 
 
 app = QApplication(sys.argv)
 student_management = MainWindow()
 student_management.show()
 sys.exit(app.exec())
-
